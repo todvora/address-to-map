@@ -64,12 +64,13 @@
         }
 
         function doProcessOneAddress(map, geocoder, settings, address) {
-            geocoder.geocode({ 'address': settings.convertObjToPlainAddress(address)}, function (results, status) {
+            var plainAddress = settings.convertObjToPlainAddress(address)
+            geocoder.geocode({ 'address': plainAddress}, function (results, status) {
                 if (status == google.maps.GeocoderStatus.OK) {
                     var coordinates = results[0].geometry.location;
                     addMapMarker(map, settings, coordinates, address);
                 } else {
-                    console.log("Failed to load coordinates of address '" + address + "'. Reason: " + status);
+                    console.log("Failed to load coordinates of address '" + plainAddress + "'. Reason: " + status);
                 }
             })
 
