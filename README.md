@@ -1,4 +1,4 @@
-address-to-map
+Address to Map jQuery plugin
 ==============
 
 jQuery plugin for converting text addresses to coordinates and showing them on map. For geocoding is used Google Maps Geocoding service (see https://developers.google.com/maps/documentation/javascript/examples/geocoding-simple) 
