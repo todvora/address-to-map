@@ -14,10 +14,14 @@
         var openedInfowindow = null;
 
         var _processAddressesCallback = function (addresses) {
-            for (var i = 0; i < addresses.length; i++) (
+
+            // address can be array or object, convert both to array
+            var iterableAddresses = convertToIterable(addresses);
+
+            for (var i = 0; i < iterableAddresses.length; i++) (
                 function (i) {
-                    var timeout = i * 1000;
-                    var address = addresses[i];
+                    var timeout = i * settings.timeoutPerItem;
+                    var address = iterableAddresses[i];
 
                     setTimeout(function () {
                         doProcessOneAddress(map, geocoder, settings, address);
@@ -37,12 +41,20 @@
                 mapElementId: "map-canvas",
                 mapCenter: "50.074934, 12.369562",
                 mapZoom: 13,
+                timeoutPerItem: 1000, // one second timeout (ok for geocoding service)
                 convertObjToPlainAddress: function (addressObject) {
                     return addressObject;
                 },
-                mapInfoWindow: function (addressObject) {
+                createInfoWindow: function (addressObject) {
                     return new google.maps.InfoWindow({
                         content: "<p>" + addressObject + "</p>"
+                    });
+                },
+                createMarker: function(map, coordinates, address) {
+                    return new google.maps.Marker({
+                        map: map,
+                        position: coordinates,
+                        animation: google.maps.Animation.DROP
                     });
                 }
             }, options);
@@ -63,6 +75,19 @@
             );
         }
 
+        function convertToIterable(addresses) {
+            if($.isArray(addresses)) {
+                return addresses;
+            } else if($.isPlainObject(addresses)) {
+                // if object, convert to array of values (ignoring keys)
+                var iterableAddresses = [];
+                $.each(addresses, function( key, value ) {
+                    iterableAddresses.push(value);
+                });
+                return iterableAddresses;
+            }
+        }
+
         function doProcessOneAddress(map, geocoder, settings, address) {
             var plainAddress = settings.convertObjToPlainAddress(address)
             geocoder.geocode({ 'address': plainAddress}, function (results, status) {
@@ -79,13 +104,10 @@
         function addMapMarker(map, settings, coordinates, address) {
 
             // infowindow created by function from settings (can be overriden)
-            var infowindow = settings.mapInfoWindow(address);
+            var infowindow = settings.createInfoWindow(address);
 
-            var marker = new google.maps.Marker({
-                map: map,
-                position: coordinates,
-                animation: google.maps.Animation.DROP
-            });
+            // marker created by function from settings(can be overriden)
+            var marker = settings.createMarker(map, coordinates, address);
 
             google.maps.event.addListener(marker, 'click', function () {
                 if (openedInfowindow) {
